@@ -77,7 +77,7 @@ module Debugger
         end
       end
       if wait_connection
-        puts "Waiting for connections on #{host}:#{cmd_port}"
+        STDERR.puts "Waiting for connections on #{host}:#{cmd_port}"
         mutex.synchronize do
           proceed.wait(mutex)
         end

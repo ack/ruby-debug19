@@ -104,6 +104,7 @@ module Debugger
         file_line = "\032\032#{file_line}"
       end
       print file_line
+      file_line
     end
   
     def self.protect(mname)
@@ -242,7 +243,9 @@ module Debugger
       end
       
       preloop(commands, context)
-      CommandProcessor.print_location_and_text(file, line)
+      file_line = CommandProcessor.print_location_and_text(file, line)
+      @interface.print(file_line)
+
       while !state.proceed? 
         input = if @interface.command_queue.empty?
                   @interface.read_command(prompt(context))
