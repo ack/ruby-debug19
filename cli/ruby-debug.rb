@@ -77,9 +77,10 @@ module Debugger
         end
       end
       if wait_connection
+        puts "Waiting for connections on #{host}:#{cmd_port}"
         mutex.synchronize do
           proceed.wait(mutex)
-        end 
+        end
       end
     end
     alias start_server start_remote
@@ -104,13 +105,35 @@ module Debugger
       require "socket"
       interface = Debugger::LocalInterface.new
       socket = TCPSocket.new(host, port)
-      puts "Connected."
-      
+      if ENV['EMACS']
+        print "\032\032starting\n" # mirrors non-remote --client
+      else
+        print "Connected.\n" # preserve old behavior
+      end
+
       catch(:exit) do
-        while (line = socket.gets)
-          case line 
+        trap('INT') do
+          STDERR.puts "\nABORTED"
+          interface.finalize
+          throw :exit
+        end
+        while true
+          begin
+            line = socket.gets
+          rescue Errno::ECONNABORTED, Errno::ECONNRESET
+            print "Disconnected\n"
+            throw :exit
+          end
+
+          case line
+          when nil
+            break
           when /^PROMPT (.*)$/
-            input = interface.read_command($1)
+            prompt = $1
+            prompt = socket.gets.chomp # next is actual prompt
+            sanity = socket.gets
+            throw :exit unless sanity =~ /PROMPT/i
+            input = interface.read_command(prompt)
             throw :exit unless input
             socket.puts input
           when /^CONFIRM (.*)$/
@@ -122,6 +145,8 @@ module Debugger
           end
         end
       end
+
+      interface.finalize
       socket.close
     end
     
