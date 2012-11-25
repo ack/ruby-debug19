@@ -67,6 +67,9 @@ handling, bindings for stack frames among other things.
   s.add_dependency("ruby-debug-base19", ">= 0.11.19")
   s.add_dependency("linecache19", ">= 0.5.11")
 
+  s.executables = ['rdebug']
+  s.default_executable = ['rdebug']
+
   if s.respond_to? :specification_version then
     current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
